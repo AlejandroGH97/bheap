@@ -143,37 +143,83 @@ public:
   void Compactar ()
   {
     size_t maxGrado = floor(log2(this->m_size))+1;
-
-    std::vector<NodoB<T>*> newRoots(maxGrado,nullptr);
-    NodoB<T>* temp;
-
-    for(NodoB<T>* elem: this->m_heap) {
-      temp = elem;
-      while(newRoots[temp->getM_Grado()] != nullptr) {
-        temp = this->Unir(temp,newRoots[temp->getM_Grado()]);
-        newRoots[temp->getM_Grado()-1] = nullptr;
-      }
-      newRoots[temp->getM_Grado()] = temp;
-    }
-    this->m_heap.clear();
-
-    for(auto e: newRoots) {
-      if(e) {
-        this->m_heap.push_back(e);
-      }
-    }
-    
+    NodoB<T>* newRoots[maxGrado];
+    NodoB<T> *temp, *elemtemp;
+    std::list<NodoB<T>*> newHeap;
     NodoB<T>* newMin = nullptr;
+    for(int i = 0; i < maxGrado; i++) newRoots[i] = nullptr;
+
     for(NodoB<T>* elem: this->m_heap) {
-      if(!newMin) {
-        newMin = elem;
-        continue;
+      std::cout<<"Compactando "<<elem->getM_key()<<"\n";
+      elemtemp = elem;
+      if(newRoots[elemtemp->getM_Grado()]) {
+        
+        while(true) {
+          temp = newRoots[elemtemp->getM_Grado()];
+          newRoots[elemtemp->getM_Grado()] = nullptr;
+
+          if( elemtemp->getM_key() < temp->getM_key()) {
+            elemtemp->getM_Hijos().push_back(temp);
+            elemtemp->setM_Grado(elemtemp->getM_Grado()+1);
+          }
+          else {
+            temp->getM_Hijos().push_back(elemtemp);  
+            temp->setM_Grado(temp->getM_Grado()+1);  
+            elemtemp = temp;
+          }
+
+          if(!newRoots[elemtemp->getM_Grado()]) {
+            newRoots[elemtemp->getM_Grado()] = elemtemp;
+            break;
+          }      
+
+        }
       }
-      else if(newMin->getM_key() > elem->getM_key()){
-        newMin = elem;
+      else {
+        newRoots[elem->getM_Grado()] = elem;
       }
     }
 
+    // for(NodoB<T>* elem: this->m_heap) {
+    //   temp = elem;
+    //   while(newRoots[temp->getM_Grado()] != nullptr) {
+    //     temp = this->Unir(temp,newRoots[temp->getM_Grado()]);
+    //     newRoots[temp->getM_Grado()-1] = nullptr;
+    //   }
+    //   newRoots[temp->getM_Grado()] = temp;
+    // }
+    // this->m_heap.clear();
+
+    // for(auto e: newRoots) {
+    //   if(e) {
+    //     this->m_heap.push_back(e);
+    //   }
+    // }
+    
+    
+    for(int i = 0; i < maxGrado; i++) {
+      if(newRoots[i]) {
+        if(!newMin) {
+          newMin = newRoots[i];
+        }
+        else if(newMin->getM_key() > newRoots[i]->getM_key()){
+          newMin = newRoots[i];
+        }
+        newHeap.push_back(newRoots[i]);
+
+      }
+    }
+
+    // for(NodoB<T>* elem: this->m_heap) {
+    //   if(!newMin) {
+    //     newMin = elem;
+    //     continue;
+    //   }
+    //   else if(newMin->getM_key() > elem->getM_key()){
+    //     newMin = elem;
+    //   }
+    // }
+    this->setM_heap(newHeap);
     this->m_minNode = newMin;
   }
 
